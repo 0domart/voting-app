@@ -40,7 +40,6 @@ export const AppProvider = ({ children }) => {
   const createVote = async (topic, options, duration) => {
     setError("");
     setSuccess("");
-    console.log("Running")
     try {
       const voteAccountKeypair = Keypair.generate();
 

@@ -1,5 +1,5 @@
 .wrapper {
-  background-color: #383c47;
+  background-color: #111111;
   width: 100%;
   min-height: 50px;
   color: black;
@@ -18,7 +18,7 @@
   font-size: 2rem;
   cursor: pointer;
   font-weight: bolder;
-  color: #f2505e;
+  color: #007bff;
   display: flex;
   align-items: center;
   justify-content: center;
