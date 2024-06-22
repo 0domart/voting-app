@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::Clock;
 
-declare_id!("HzuXSkskFx6Ai1NNP8Q42yXFTE6nuh8ZCPQB8ctamJqz");
+declare_id!("p6xhgFgsVzDvwC2NeZg7JioSQMv7TH4mP251cmgtB1c");
 
 #[program]
 pub mod voting {
@@ -41,6 +41,7 @@ pub mod voting {
         let voter = &mut ctx.accounts.voter_account;
         require!(!voter.voted, VotingErr::AlreadyVoted);
         voter.voted = true;
+        voter.option_index = option_index;
 
         vote_account.options[option_index as usize].votes += 1;
         Ok(())
@@ -88,10 +89,11 @@ pub struct VoteOption {
 #[account]
 pub struct Voter {
     pub voted: bool,
+    pub option_index: u8,
 }
 
 impl Voter {
-    const LEN: usize = 8 + 1;
+    const LEN: usize = 8 + 1 + 8;
 }
 
 #[error_code]
