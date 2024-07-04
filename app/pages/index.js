@@ -19,7 +19,8 @@ import ViewVotes from "../components/ViewVotes";
 import style from "../styles/Home.module.css";
 
 export default function Home() {
-  const endpoint = "http://127.0.0.1:8899"; //clusterApiUrl(WalletAdapterNetwork.Devnet);
+  // TODO 1 - Choisir son environnement de dev - soit local, soit devnet
+  const endpoint = clusterApiUrl(WalletAdapterNetwork.Devnet); // "http://127.0.0.1:8899";
 
   const wallets = useMemo(
     () => [

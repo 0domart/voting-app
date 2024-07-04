@@ -7,12 +7,12 @@ import {
 } from "./constants";
 
 export const getProgram = (connection, wallet) => {
-  // Uncomment le code
-  /*const provider = new AnchorProvider(connection, wallet, {
+  // TODO 2 Uncomment le code
+  const provider = new AnchorProvider(connection, wallet, {
     commitment: "confirmed",
   });
   const program = new Program(IDL, PROGRAM_ID, provider);
-  return program;*/
+  return program;
 };
 
 export const getVoterAddress = async (votePublicKey, userPublicKey) => {

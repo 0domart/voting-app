@@ -8,7 +8,7 @@ const Vote = ({ account, publicKey }) => {
   const [voteOver, setVoteOver] = useState(false);
 
   useEffect(() => {
-       const deadline = account.votingDeadline * 1000;
+       const deadline = account.deadline * 1000;
        const updateTimer = () => {
          const now = new Date().getTime();
          const distance = deadline - now;
@@ -34,12 +34,13 @@ const Vote = ({ account, publicKey }) => {
 
   return (
     <div className={style.wrapper}>
-       <h2 className={style.title}>{account.topic}</h2>
-       {account.options.map((option, index) => (
+       <h2 className={style.title}>{account.title}</h2>
+       <p>{account.description}</p>
+       {account.choices.map((option, index) => (
          <div key={index} className={style.option}>
            <div>
-             <p>Option {index + 1}: {option.name}</p>
-             <p className={style.voteCount}>Votes: {parseInt(option.votes)}</p>
+             <p>Option {index + 1}: {option.label}</p>
+             <p className={style.voteCount}>Votes: {parseInt(option.count)}</p>
            </div>
            {!voteOver && (
             <button
