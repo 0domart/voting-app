@@ -7,7 +7,7 @@ import {
 } from "./constants";
 
 export const getProgram = (connection, wallet) => {
-  // Uncomment le code
+  // TODO 2 Uncomment le code
   /*const provider = new AnchorProvider(connection, wallet, {
     commitment: "confirmed",
   });

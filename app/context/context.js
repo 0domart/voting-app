@@ -2,7 +2,7 @@ import { createContext, useState, useEffect, useContext, useMemo } from "react";
 import { SystemProgram } from "@solana/web3.js";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { Keypair } from "@solana/web3.js";
-
+import { BN } from "bn.js";
 import {
   getProgram,
   getVoterAddress

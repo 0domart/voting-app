@@ -5,12 +5,18 @@ import style from '../styles/SetupVote.module.css';
 const SetupVote = () => {
   const { createVote } = useAppContext();
   const [topic, setTopic] = useState('');
+  const [description, setDescription] = useState('');
   const [options, setOptions] = useState('');
   const [duration, setDuration] = useState('');
 
   const creerVote = () => {
     const optionsArray = options.split(',').map(option => option.trim());
-    createVote(topic, optionsArray, parseInt(duration));
+
+    const currentTimestamp = new Date().getTime() / 1000;
+    const durationInSeconds = parseInt(duration) * 24 * 60 * 60;
+    const deadline = parseInt(currentTimestamp + durationInSeconds);
+
+    createVote(topic, description, optionsArray, deadline);
   };
 
   return (
@@ -22,6 +28,15 @@ const SetupVote = () => {
         id="topic"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
+      />
+
+    <label className={style.label} htmlFor="topic">Vote Description</label>
+      <input
+        className={style.input}
+        type="text"
+        id="description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
       />
       
       <label className={style.label} htmlFor="options">Options (séparé par des virgules)</label>
