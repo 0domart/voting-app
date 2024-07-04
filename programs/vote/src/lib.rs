@@ -4,104 +4,116 @@ use anchor_lang::solana_program::clock::Clock;
 declare_id!("p6xhgFgsVzDvwC2NeZg7JioSQMv7TH4mP251cmgtB1c");
 
 #[program]
-pub mod voting {
+mod vote {
     use super::*;
 
-    pub fn create_vote(
-        ctx: Context<CreateVote>,
-        topic: String,
-        options: Vec<String>,
-        voting_days: i32,
+    pub fn create_proposal(
+        ctx: Context<CreateProposal>,
+        title: String,
+        description: String,
+        choices: Vec<String>,
+        deadline: u64,
     ) -> Result<()> {
-        let vote_account = &mut ctx.accounts.vote_account;
-        vote_account.topic = topic;
-        vote_account.voting_deadline = Clock::get()?.unix_timestamp + (voting_days * 86400) as i64;
-        vote_account.options_count = options.len() as u8;
-        vote_account.options = options
-            .into_iter()
-            .map(|opt| VoteOption {
-                name: opt,
-                votes: 0,
-            }).collect();
+        let proposal_account = &mut ctx.accounts.proposal;
+
+        // Verifier < 10 choices sinon erreur
+        require!(
+            choices.len() <= MAX_COUNT_OF_CHOICES,
+            VoteError::MaxChoicesReach
+        );
+
+        proposal_account.title = title;
+        proposal_account.description = description;
+        proposal_account.deadline = deadline;
+
+        let mut vec_choices = Vec::new();
+
+        for choice in choices {
+            let option = Choice {
+                label: choice,
+                count: 0,
+            };
+
+            vec_choices.push(option);
+        }
+
+        proposal_account.choices = vec_choices;
+
         Ok(())
     }
 
-    // Vote for a specific option
-    pub fn vote(ctx: Context<CastVote>, option_index: u8) -> Result<()> {
-        let vote_account = &mut ctx.accounts.vote_account;
+    pub fn cast_vote(ctx: Context<CastVote>, choice: u8) -> Result<()> {
+        let proposal_account = &mut ctx.accounts.proposal;
+        let voter_account = &mut ctx.accounts.voter;
+
         require!(
-            Clock::get()?.unix_timestamp < vote_account.voting_deadline,
-            VotingErr::VotingIsOver
-        );
-        require!(
-            option_index < vote_account.options.len() as u8,
-            VotingErr::InvalidOption
+            Clock::get()?.unix_timestamp < proposal_account.deadline as i64,
+            VoteError::VotingIsOver
         );
 
-        let voter = &mut ctx.accounts.voter_account;
-        require!(!voter.voted, VotingErr::AlreadyVoted);
-        voter.voted = true;
-        voter.option_index = option_index;
+        require!(
+            choice <= proposal_account.choices.len() as u8,
+            VoteError::InvalidOption
+        );
 
-        vote_account.options[option_index as usize].votes += 1;
+        voter_account.proposal = proposal_account.key();
+        voter_account.user = ctx.accounts.signer.key();
+        voter_account.choice_option = choice;
+
+        proposal_account.choices[choice as usize].count += 1;
         Ok(())
     }
 }
 
+const MAX_COUNT_OF_CHOICES: usize = 10;
+
 #[derive(Accounts)]
-pub struct CreateVote<'info> {
-    #[account(init, payer = user, space = VoteAccount::LEN)]
-    pub vote_account: Account<'info, VoteAccount>,
+pub struct CreateProposal<'info> {
+    #[account(init, payer = signer, space = 8 + 32 + 32 + (32 + 8) * MAX_COUNT_OF_CHOICES + 8)]
+    pub proposal: Account<'info, Proposal>,
     #[account(mut)]
-    pub user: Signer<'info>,
+    pub signer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct CastVote<'info> {
     #[account(mut)]
-    pub vote_account: Account<'info, VoteAccount>,
-    #[account(init, payer = user, space = Voter::LEN, seeds = [vote_account.key().as_ref(), user.key().as_ref()], bump)]
-    pub voter_account: Account<'info, Voter>,
+    pub proposal: Account<'info, Proposal>,
+    #[account(init, payer = signer, space = 8 + 32 + 32 + 1 + 1, seeds = [proposal.key().as_ref(), signer.key().as_ref()], bump)]
+    pub voter: Account<'info, Voter>,
     #[account(mut)]
-    pub user: Signer<'info>,
+    pub signer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 #[account]
-pub struct VoteAccount {
-    pub topic: String,
-    pub voting_deadline: i64,
-    pub options_count: u8,
-    pub options: Vec<VoteOption>,
-}
-
-impl VoteAccount {
-    const LEN: usize = 8 + 32 + 8 + 1 + (32 + 8) * 10;
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct VoteOption {
-    pub name: String,
-    pub votes: u64,
+pub struct Proposal {
+    title: String,
+    description: String,
+    choices: Vec<Choice>,
+    deadline: u64,
 }
 
 #[account]
 pub struct Voter {
-    pub voted: bool,
-    pub option_index: u8,
+    proposal: Pubkey,
+    user: Pubkey,
+    choice_option: u8,
 }
 
-impl Voter {
-    const LEN: usize = 8 + 1 + 8;
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct Choice {
+    label: String,
+    count: u64,
 }
 
 #[error_code]
-pub enum VotingErr {
-    #[msg("Voting period is over!")]
-    VotingIsOver,
-    #[msg("You have already voted!")]
-    AlreadyVoted,
-    #[msg("Invalid option!")]
+pub enum VoteError {
+    #[msg("Too many choices")]
+    MaxChoicesReach,
+    #[msg("Invalid option")]
     InvalidOption,
+    #[msg("Vote is over")]
+    VotingIsOver,
 }
