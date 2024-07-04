@@ -40,6 +40,20 @@ export const AppProvider = ({ children }) => {
     const votes = await program.account.proposal.all();
     const sortedVotes = votes.sort((a, b) => a.account.deadline - b.account.deadline);
     setVotes(sortedVotes);
+    
+
+    if(wallet && wallet.publicKey){
+      const updatedVotes = await Promise.all(sortedVotes.map(async(vote) => {
+        const voterAccountAddress = await getVoterAddress(vote.publicKey, wallet.publicKey);
+        const voterInfo = await program.account.voter.fetchNullable(voterAccountAddress);
+        return {
+          ...vote,
+          voterInfo: voterInfo
+        };
+      }));
+
+      setVotes(updatedVotes);
+    }
   }
 
   // TODO 4

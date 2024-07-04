@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAppContext } from "../context/context";
 import style from '../styles/Vote.module.css';
 
-const Vote = ({ account, publicKey }) => {
+const Vote = ({ account, publicKey, voterInfo }) => {
   const { vote } = useAppContext();
   const [timeLeft, setTimeLeft] = useState('');
   const [voteOver, setVoteOver] = useState(false);
@@ -36,6 +36,9 @@ const Vote = ({ account, publicKey }) => {
     <div className={style.wrapper}>
        <h2 className={style.title}>{account.title}</h2>
        <p>{account.description}</p>
+       {voterInfo && (
+        <p>Vous avez voté pour option : {voterInfo?.choiceOption+1}</p>
+      )}
        {account.choices.map((option, index) => (
          <div key={index} className={style.option}>
            <div>
